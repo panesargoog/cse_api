@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+    <title>Home Depot CSE</title>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+
+<h1>Home Depot CSE</h1>
+
+{% for a in result['queries']['request'] %}
+<h2> {{ a['totalResults']}} results</h2>
+{% endfor %}
+
+{% for r in result['items'] %}
+<p>{{ r['htmlTitle']|safe }} <br>
+    {{ r['htmlSnippet']|safe }} <br>
+    <a href="{{ r['link'] }}"> {{r['displayLink']}} </a>
+</p>
+{% endfor %}
+
+</body>
+</html>
