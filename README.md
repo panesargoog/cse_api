@@ -1,5 +1,5 @@
 
-This project contains code to make multiple parallel calls to CSE API. It colates those results and returns a single
+This project contains code to make multiple parallel calls to CSE API. It collates those results and returns a single
 JSON response.
 
 To use it you will need a keys.py file with the cse_id and api_key.
