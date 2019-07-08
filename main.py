@@ -27,12 +27,9 @@ app = Flask(__name__)
 service = build("customsearch", "v1", developerKey=api_key)
 
 
-
-
-
 @app.route('/')
 def form():
-     return render_template('form.html')
+    return render_template('form.html')
 
 
 def single_search(q, start):
@@ -47,6 +44,7 @@ def single_search(q, start):
     print(q, start, t2 - t1)
     return sr
 
+
 def parallel_search(q):
     t1 = time.time()
     p = Pool(3)
@@ -54,7 +52,7 @@ def parallel_search(q):
     start = [1, 11, 21]
     results = p.starmap(single_search, zip(repeat(q), start))
     i = 0
-    all_results= {}
+    all_results = {}
     try:
         for r in results:
             if r:
@@ -82,7 +80,7 @@ def construct_item_list(search_results):
                 pid = link.rsplit('/', 1)[1]
             except IndexError:
                 continue
-            #TODO: Lookup storeId from inventory.
+            # TODO: Lookup storeId from inventory.
             item = {
                 'productId': pid,
                 'itemId': pid,
@@ -111,6 +109,7 @@ def result_page():
     """Return the formatted search result page."""
     return results
 
+
 # Test code follows:
 
 @app.route('/sr')
@@ -127,9 +126,10 @@ def test():
     try:
         sr = service.cse().siterestrict().list(q=q, cx=cse_id, num=10, start=1).execute()
     except googleapiclient.errors.HttpError as err:
-        print("Error: ",  err)
+        print("Error: ", err)
         return "Error"
     return jsonify(sr)
+
 
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
