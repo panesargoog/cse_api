@@ -112,7 +112,7 @@ def construct_dimension(search_results, dim):
                 try:
                     dimension[brand_name]["record_count"] += 1
                 except KeyError:
-                    # TODO: Add filterParam, and refinmentKey
+                    # TODO: Add filterParam, and refinementKey
                     new_brand_refinement = {
                         "label": brand_name,
                         "recordCount": 1
