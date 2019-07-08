@@ -157,21 +157,17 @@ def query():
 def result_page():
     """Return the formatted search result page."""
     query = request.form['query']
-    results = search_result_page(query, api_key, cse_id, num=10)
+    results = search_result_page(query)
     return results
 
 
-# Test code follows:
-
-@app.route('/sr')
-def search_result_page():
+def search_result_page(query):
     """HTML version of a single CSE search result."""
-    search_term = request.args.get('q')
     search_results = service.cse().siterestrict().list(
-        q=search_term, cx=cse_id).execute()
+        q=query, cx=cse_id).execute()
     return render_template('index.html', result=search_results)
 
-
+# Test code follows:
 @app.route('/test')
 def test():
     """Return the JSON version of a CSE search result."""
