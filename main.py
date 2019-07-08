@@ -14,14 +14,12 @@
 
 # [START gae_python37_app]
 from flask import jsonify, Flask, render_template, request
-
-from googleapiclient.discovery import build
 import googleapiclient
-from multiprocessing import Pool
-
-from keys import api_key, cse_id
-import time
+from googleapiclient.discovery import build
 from itertools import repeat
+from keys import api_key, cse_id
+from multiprocessing import Pool
+import time
 
 app = Flask(__name__)
 service = build("customsearch", "v1", developerKey=api_key)
@@ -93,20 +91,73 @@ def construct_item_list(search_results):
     return items
 
 
+def add_dimension(label, refinements):
+    # Dimension consists of a label, and refinements
+    return {
+        "label": label,
+        "refinements": refinements,
+
+    }
+
+
+def construct_dimension(search_results, dim):
+    # group the search results by dim, and count the number of records/dim
+    # e.g. dim = 'brand'
+    dimension = {}
+    for i in search_results["items"]:
+        try:
+            products = i["pagemap"]["product"]
+            for product in products:
+                brand_name = product[dim]
+                try:
+                    dimension[brand_name]["record_count"] += 1
+                except KeyError:
+                    # TODO: Add filterParam, and refinmentKey
+                    new_brand_refinement = {
+                        "label": brand_name,
+                        "recordCount": 1
+                    }
+                    dimension[brand_name] = new_brand_refinement
+        except KeyError:
+            print(i)
+
+    return add_dimension(dim, dimension)
+
+
+def construct_dimensions(search_results):
+    dim = ['brand', 'color']
+    # TODO: category
+    # TODO: price, review_rating (histogram dimensions)
+    dim_list = []
+    for d in dim:
+        dim_list.append(construct_dimension(search_results, d))
+    return dim_list
+
+
+def transform(search_results):
+    """Transform CSE response to something similar to THD search response."""
+    # Add itemIds and dimensions
+    search_results['itemIds'] = construct_item_list(search_results)
+    search_results['dimensions'] = construct_dimensions(search_results)
+    # TODO: Add breadCrumbs, metadata, and searchReport sections.
+    return search_results
+
+
 @app.route('/api')
 def query():
+    """Make parallel requests to CSE API, and return a response similar to THD Search response."""
     q = request.args.get('q')
     search_results = parallel_search(q)
-    search_results['itemIds'] = construct_item_list(search_results)
+    search_results = transform(search_results)
 
     return jsonify(search_results)
 
 
 @app.route('/result', methods=['POST'])
 def result_page():
+    """Return the formatted search result page."""
     query = request.form['query']
     results = search_result_page(query, api_key, cse_id, num=10)
-    """Return the formatted search result page."""
     return results
 
 
@@ -114,6 +165,7 @@ def result_page():
 
 @app.route('/sr')
 def search_result_page():
+    """HTML version of a single CSE search result."""
     search_term = request.args.get('q')
     search_results = service.cse().siterestrict().list(
         q=search_term, cx=cse_id).execute()
@@ -122,6 +174,7 @@ def search_result_page():
 
 @app.route('/test')
 def test():
+    """Return the JSON version of a CSE search result."""
     q = request.args.get('q')
     try:
         sr = service.cse().siterestrict().list(q=q, cx=cse_id, num=10, start=1).execute()
